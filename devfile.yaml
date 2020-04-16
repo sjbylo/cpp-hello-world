@@ -1,0 +1,51 @@
+metadata:
+  name: steve-cpp
+projects:
+  - name: cpp-hello-world
+    source:
+      location: 'https://github.com/sjbylo/cpp-hello-world'
+      type: git
+      branch: master
+attributes:
+  persistVolumes: 'false'
+components:
+  - id: che-incubator/cpptools/latest
+    preferences:
+      clangd.path: /usr/bin/clangd
+      cdt.clangd.binaries.enable: false
+    type: chePlugin
+    alias: cpp-plugin
+  - mountSources: true
+    memoryLimit: 512Mi
+    type: dockerimage
+    image: 'quay.io/eclipse/che-cpp-rhel7:nightly'
+    alias: cpp-dev
+apiVersion: 1.0.0
+commands:
+  - name: build
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/cpp-hello-world'
+        type: exec
+        command: g++ -g hello.cpp -o hello.out && echo "Build complete"
+        component: cpp-dev
+  - name: run
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/cpp-hello-world'
+        type: exec
+        command: ./hello.out
+        component: cpp-dev
+  - name: debug
+    actions:
+      - referenceContent: |
+          {
+            "version": "0.2.0",
+            "configurations": [
+                {
+                    "type": "gdb",
+                    "name": "Debug c++ application",
+                    "request": "launch",
+                    "program": "/projects/cpp-hello-world/hello.out"
+                }
+            ]
+          }
+        type: vscode-launch
